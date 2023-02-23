@@ -210,9 +210,59 @@ nnoremap ; :
 :command Qa qa
 :command QA qa
 
+" complete simple
 inoremap { {<CR>}<Up><Enter>
 inoremap ( ()<Left>
 inoremap < <><Left>
 inoremap [ []<Left>
 inoremap " ""<Left>
 inoremap ' ''<Left>
+
+" import plugin manager
+call plug#begin('~/.vim/plugged')
+    " >>> lsp plug
+    Plug 'prabirshrestha/async.vim'
+    Plug 'prabirshrestha/vim-lsp'
+    Plug 'prabirshrestha/asyncomplete.vim'
+    Plug 'prabirshrestha/asyncomplete-lsp.vim'
+    " <<< lsp plug
+    Plug 'tomasr/molokai' 
+call plug#end()
+
+" Enable theme
+let g:molokai_original = 1
+let g:rehash256 = 1
+colorscheme molokai
+
+" Config Clangd
+if executable('clangd')
+    augroup lsp_clangd
+        autocmd!
+        autocmd User lsp_setup call lsp#register_server({
+                    \ 'name': 'clangd',
+                    \ 'cmd': {server_info->['clangd']},
+                    \ 'whitelist': ['c', 'cpp', 'objc', 'objcpp'],
+                    \ })
+        autocmd FileType c setlocal omnifunc=lsp#complete
+        autocmd FileType cpp setlocal omnifunc=lsp#complete
+        autocmd FileType objc setlocal omnifunc=lsp#complete
+        autocmd FileType objcpp setlocal omnifunc=lsp#complete
+        " 其实这里注册了四种语言
+    augroup end
+endif
+
+" 设置在有补全提示框出现时，按 Tab 等建的操作
+inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+inoremap <expr> <cr>    pumvisible() ? asyncomplete#close_popup() : "\<cr>"
+
+" 设置 Ctrl+空格 键为强制刷新显示补全建议
+imap <c-space> <Plug>(asyncomplete_force_refresh)
+
+" 显示诊断信息浮窗
+let g:lsp_diagnostics_float_cursor = 1
+
+" 始终显示 sign 栏，否则它的自动出现与消失会导致“抖动”
+set signcolumn=yes
+" 或者关闭 lsp 的 sign
+" let g:lsp_diagnostics_signs_enabled = 0
